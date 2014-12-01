@@ -19,7 +19,7 @@ typedef short unsigned int bitname;
 class dictionary
 {
 private:
-	map<string, pair<bitname*, int > > features;
+	map<int, pair<bitname*, int > > features;
 	int videoNumber;
 
 public:
@@ -166,8 +166,6 @@ public:
 
 	bitname* grabFeature(const string& videoname,  int& num)
 	{
-		bitname* feature = new bitname[40000];
-		feature = dict[videoname].first;
 		num = dict[videoname].second;
 		return feature;
 	}
@@ -184,6 +182,5 @@ private:
 	map<string, bool> flags;
 	dictionary dict;
 };
-
 
 #endif

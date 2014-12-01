@@ -10,6 +10,9 @@
 #include <functional>
 #include <random>
 #include "time.h"
+#include "basis.h"
+#include "scanner.h"
+#include "topk_search.h"
 
 using namespace std;
 typedef unsigned short int bitname;
@@ -26,20 +29,17 @@ namespace lsh
 			size_t N;
 			size_t M;
 			size_t D;
-		} lsh_para;
 
-		typedef struct 
-		{
-			string dirPath;
-			int videoLength;
-			bitname* feature;
-		} video_node;
+			videoMat tmpMat;
+		} lsh_para;
 
 	private:
 		lsh_para para;
 		vector<vector<size_t> > rndPosition;  // hamming feature position 
 		vector<vector<size_t> > rndBits;
-		vector<map< size_t, vector<video_node> > > tables;
+		vector<map< size_t, vector<uit> > > tables;
+		scanner scan;
+		indexMentor mentor;
 
 	public:
 		rbhLsh() {};
@@ -56,6 +56,7 @@ namespace lsh
 			tables.resize(para.L);
 			rndPosition.resize(para.L);
 			rndBits.resize(para.L);
+			scan.init(para.tmpMat, 10);
 
 			mt19937 rng(size_t(time(0)));
 			uniform_int_distribution<size_t> rngPos(0, para.D-1);
@@ -65,7 +66,7 @@ namespace lsh
 				while (it->size() != para.N)
 				{
 					size_t target = rngPos(rng);
-					if( find(it->begin(); it->end(), target) == it->end())
+					if( find(it->begin(), it->end(), target) == it->end())
 						it->push_back(target);
 				}
 			}
@@ -81,10 +82,7 @@ namespace lsh
 
 		void insert(bitname* key, int num,  string videoname)
 		{
-			video_node node;
-			node.feature = key;
-			node.videoLength = num;
-			node.dirPath = videoname;
+			info_node node;
 
 			for (int i = 0; i < para.L; i++)
 			{
@@ -102,7 +100,29 @@ namespace lsh
 				}
 
 				size_t bucket = sum% para.M;
-				tables[i][bucket].push_back(node);
+				tables[i][bucket].push_back(mentor.generate());
+			}
+		}
+
+		int insert(const video_node& node)
+		{
+			for (int i = 0; i < para.L; i++)
+			{
+				size_t sum(0);
+				for (int j = 0; j < para.N; j++)
+				{
+					size_t index = rndPosition[i][j] >> 4;  //
+					size_t pos = rndPosition[i][j] & 0x0F;
+					bitname mask = 1 << pos;
+
+					if (node.feature[index]  & mask)
+					{
+						sum += rndBits[i][j];
+					}
+				}
+
+				size_t bucket = sum% para.M;
+				tables[i][bucket].push_back(mentor.generate());
 			}
 		}
 
@@ -112,6 +132,7 @@ namespace lsh
 			query.dirPath = videoname;
 			query.videoLength = num;
 			query.feature = key;
+			scan.reset(query);
 
 			for (int i = 0; i < para.L; i++)
 			{
@@ -132,23 +153,19 @@ namespace lsh
 
 				if (tables[i].find(bucket) != tables[i].end())
 				{
-					vector<video_node> candidates = tables[i][bucket];
-					search_topk_matches(candidates, key, num);
+					vector<uit> candidates = tables[i][bucket];
+					for (int i = 0; i < candidates.size(); i++)
+					{
+						scan.push(candidates[i]);
+					}
 				}
 			}
 		}
 
-		void search_topk_matches(const vector<video_node>& candidates, bitname* key, const size_t& num)
-		{
-
-		}
+		void search_topk_matches(const vector<uit>& candidates, bitname* key, const size_t& num);
 
 	};
-
-
 	
+
 }
-
-
-
 #endif

@@ -21,10 +21,10 @@ namespace lsh
 	private:
 		int num;
 		vector<pair<string, float> > distArray;
-		vector<pair<string, float> > heapK;
+		vector<pair<uit, float> > heapK;   // float代表两个二值化向量中不同位数在较短的视频上占的比重
 
 	public:
-		int reset(const int& k, vector<pair<string, float> >& distance )
+		int reset(const int& k, vector<pair<uit, float> >& distance )
 		{
 			if (distance.size() < k)
 			{
@@ -40,13 +40,13 @@ namespace lsh
 
 		struct distPair
 		{
-			bool operator () (pair<string, float>x, pair<string, float> y)
+			bool operator () (pair<uit, float>x, pair<uit, float> y)
 			{
 				return x.second > y.second;
 			}
 		}distCmp;
 
-		int sortHeap(const int& k, vector<pair<string, float> >& distance )
+		int sortHeap(const int& k, vector<pair<uit, float> >& distance )
 		{
 			if (distance.size() < k)
 			{
@@ -60,7 +60,7 @@ namespace lsh
 
 			make_heap(heapK.begin(), heapK.end(), distCmp);
 
-			vector<pair<string, float> >::const_iterator it = distance.begin();
+			vector<pair<uit, float> >::const_iterator it = distance.begin();
 			while (it!= distance.end())
 			{
 				if (it->second < heapK.front().second)
@@ -75,31 +75,38 @@ namespace lsh
 			return 0;
 		}
 
-		vector<pair<string, float> > getTopk()
+		vector<pair<uit, float> > getTopk()
 		{
 			return heapK;
 		}
 
-		const vector<pair<string, float> > getTopk() const
+		const vector<pair<uit, float> > getTopk() const
 		{
 			return heapK;
 		}
+
+		bool push_back(const pair<uit, float>& candi)
+		{
+			if (candi.second<heapK.front().second)
+			{
+				heapK.push_back(candi);
+				push_heap(heapK.begin(), heapK.end(), distCmp);
+			}
+			return true;
+		}
+
+		pair<uit, float> pop_back()
+		{
+			if (heapK.empty())
+				return pair<uit, float>(0, 0);
+			pair<uit, float> candi;
+			candi = heapK.front();
+			pop_heap(heapK.begin(), heapK.end(), distCmp);
+			heapK.pop_back();
+			return candi;
+		}
 	};
 
-
-	class scanner
-	{
-	public:
-		scanner() {}
-		~scanner() {} 
-
-	private:
-		topk topPair;
-
-
-
-
-	};
 }
 
 #endif

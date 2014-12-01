@@ -94,6 +94,7 @@
     <ClInclude Include="dictionaryLoad.h" />
     <ClInclude Include="metric.h" />
     <ClInclude Include="roundLsh.h" />
+    <ClInclude Include="scanner.h" />
     <ClInclude Include="topk_search.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
